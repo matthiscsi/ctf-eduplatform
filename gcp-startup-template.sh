@@ -41,9 +41,9 @@ apt_retry(){
 export HOME=/root
 
 # --- BEGIN USER SETTINGS ---
-REPO_URL="https://gitlab.com/matthias.adriaenssen/kdg-cybersecurityctf.git"  # or GitHub URL
-GIT_USERNAME="matthias.adriaenssen@student.kdg.be"  # optional: oauth2 for PATs or token username for deploy tokens
-GIT_TOKEN="glpat-fS3ypSURtWEqJnC7e6yP7286MQp1Oml0MTY5Cw.01.121puasij"     # optional: read-only token; prefer public repo if possible
+REPO_URL=""  # or GitHub URL
+GIT_USERNAME=""  # optional: oauth2 for PATs or token username for deploy tokens
+GIT_TOKEN=""     # optional: read-only token; prefer public repo if possible
 APP_DIR="/opt/ctf-suite"
 # --- END USER SETTINGS ---
 
