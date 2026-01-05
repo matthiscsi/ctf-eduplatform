@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /config.bak
+
+# CTF-hint: Back-ups worden soms verkeerd geplaatst (denk aan .bak-bestanden).
+# Alleen voor educatieve doeleinden.

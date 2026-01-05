@@ -1,0 +1,117 @@
+version: "3.9"
+
+services:
+  portal:
+    build: ./portal
+    container_name: ctf_portal
+    ports:
+      - "8080:5000"
+    environment:
+      - EXPECTED_LOGIN_FLAG=CTF{pwned_admin_via_sqli}
+      - EXPECTED_JWT_FLAG=CTF{jwt_role_escalation}
+      - EXPECTED_STATIC_FLAG=CTF{follow_the_robots}
+      - SECRET_KEY=change-me-for-production
+    # Portal now auto-detects host and builds URLs to ports 8001-8003.
+    # Optionally set LOGIN_URL, JWT_URL, STATIC_URL to override absolute links.
+
+  login-sqli:
+    build: ./login-sqli
+    container_name: ctf_login_sqli
+    ports:
+      - "8001:5000"
+    environment:
+      - FLAG=CTF{pwned_admin_via_sqli}
+
+  jwt-weak:
+    build: ./jwt-weak
+    container_name: ctf_jwt_weak
+    ports:
+      - "8002:5000"
+    environment:
+      - JWT_SECRET=secret
+      - FLAG=CTF{jwt_role_escalation}
+
+  static-secrets:
+    build: ./static-secrets
+    container_name: ctf_static_secrets
+    ports:
+      - "8003:5000"
+    environment:
+      - FLAG=CTF{follow_the_robots}
+
+  # Medium Challenges
+  command-injection:
+    build: ./command-injection
+    container_name: ctf_command_injection
+    ports:
+      - "8004:5000"
+    environment:
+      - FLAG=CTF{rce_through_ping}
+
+  ssrf-internal:
+    build: ./ssrf-internal
+    container_name: ctf_ssrf_internal
+    ports:
+      - "8005:5000"
+    environment:
+      - FLAG=CTF{ssrf_metadata_leak}
+
+  xxe-injection:
+    build: ./xxe-injection
+    container_name: ctf_xxe_injection
+    ports:
+      - "8006:5000"
+    environment:
+      - FLAG=CTF{xxe_file_disclosure}
+
+  brute-ssh:
+    build: ./brute-ssh
+    container_name: ctf_brute_ssh
+    ports:
+      - "2222:22"
+    environment:
+      - FLAG=CTF{brute_force_victory}
+
+  # Hacking God: Container Breakout via Docker Remote API on dind-host
+  dind-host:
+    build: ./dind-host
+    container_name: ctf_dind_host
+    privileged: true
+    environment:
+      - DOCKER_TLS_CERTDIR=
+    command: ["--host=tcp://0.0.0.0:2375", "--host=unix:///var/run/docker.sock"]
+    expose:
+      - "2375"  # Expose only to internal network
+
+  container-breakout:
+    build: ./container-breakout
+    container_name: ctf_container_breakout
+    ports:
+      - "8007:5000"
+    environment:
+      - FLAG=CTF{host_root_pwn}
+      - DIND_HOST=http://dind-host:2375
+    depends_on:
+      - dind-host
+
+  # Hard Challenges
+  hard-deserialization:
+    build: ./hard-deserialization
+    container_name: ctf_hard_deserialization
+    ports:
+      - "8008:5000"
+    environment:
+      - FLAG=CTF{pickle_rce_pwn}
+
+  hard-jwt-confusion:
+    build: ./hard-jwt-confusion
+    container_name: ctf_hard_jwt_confusion
+    ports:
+      - "8009:5000"
+    environment:
+      - FLAG=CTF{algorithm_confusion_wins}
+      - PUBLIC_KEY=very-secret-symmetric-key-9999
+
+networks:
+  default:
+    name: ctf_net

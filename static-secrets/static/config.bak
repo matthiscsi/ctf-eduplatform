@@ -1,0 +1,4 @@
+# Oude config-back-up - niet deployen!
+site_name=Statische geheimen
+debug=false
+note=Als je dit gevonden hebt, vind je misschien ook iets onder /hidden/

